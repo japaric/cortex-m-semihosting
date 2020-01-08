@@ -188,12 +188,13 @@
 mod macros;
 
 pub mod debug;
+#[cfg(not(arm))]
 #[doc(hidden)]
 pub mod export;
 pub mod hio;
 pub mod nr;
 
-#[cfg(all(thumb, not(feature = "inline-asm")))]
+#[cfg(all(any(arm, thumb), not(feature = "inline-asm")))]
 extern "C" {
     fn __syscall(nr: usize, arg: usize) -> usize;
 }
@@ -208,7 +209,7 @@ pub unsafe fn syscall<T>(nr: usize, arg: &T) -> usize {
 #[inline(always)]
 pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
     match () {
-        #[cfg(all(thumb, not(feature = "inline-asm")))]
+        #[cfg(all(any(arm, thumb), not(feature = "inline-asm")))]
         () => __syscall(_nr, _arg),
 
         #[cfg(all(thumb, feature = "inline-asm"))]
@@ -218,7 +219,14 @@ pub unsafe fn syscall1(_nr: usize, _arg: usize) -> usize {
             nr
         }
 
-        #[cfg(not(thumb))]
+        #[cfg(all(arm, feature = "inline-asm"))]
+        () => {
+            let mut nr = _nr;
+            asm!("bkpt 0xAB" : "+{r0}"(nr) : "{r1}"(_arg) :: "volatile");
+            nr
+        }
+
+        #[cfg(not(any(arm, thumb)))]
         () => unimplemented!(),
     }
 }

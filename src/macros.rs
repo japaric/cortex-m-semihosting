@@ -31,6 +31,7 @@ macro_rules! syscall1 {
 /// Macro for printing to the HOST standard output
 ///
 /// This macro returns a `Result<(), ()>` value
+#[cfg(not(arm))]
 #[macro_export]
 macro_rules! hprint {
     ($s:expr) => {
@@ -44,6 +45,7 @@ macro_rules! hprint {
 /// Macro for printing to the HOST standard output, with a newline.
 ///
 /// This macro returns a `Result<(), ()>` value
+#[cfg(not(arm))]
 #[macro_export]
 macro_rules! hprintln {
     () => {
